@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { renderDoc } from "../core/ssbPreview.js";
 import { JsonPanel } from "./JsonPanel.jsx";
+import { validateSite, describeValidationError } from "../core/validator.js";
 
 const starter = {
   title: "MVP Home",
@@ -103,11 +104,16 @@ export default function App() {
     try {
       const text = await f.text();
       const next = JSON.parse(text);
+      validateSite({ page: next });
       setPage(next);
       setError("");
     } catch (err) {
       console.error(err);
-      setError("Invalid JSON file");
+      if (err instanceof SyntaxError) {
+        setError("Invalid JSON file");
+      } else {
+        setError(describeValidationError(err));
+      }
     } finally {
       e.target.value = "";
     }
