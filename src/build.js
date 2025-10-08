@@ -1,12 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import { renderers } from "./core/renderers.js";
+import { validateSite } from "./core/validator.js";
 
 export async function build({ pagePath, layoutPath, tokensPath, themePath, outDir }) {
   const page = JSON.parse(fs.readFileSync(pagePath, "utf8"));
   const layout = JSON.parse(fs.readFileSync(layoutPath, "utf8"));
   const tokens = fs.readFileSync(tokensPath, "utf8");
   const theme = fs.readFileSync(themePath, "utf8");
+  // validate configs up front
+  validateSite({ page, layout, renderers });
 
   const html = renderPage({ page, layout });
   const doc = wrapHtml({ html, css: tokens + "\n" + theme, title: page.title || "Site" });

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { renderDoc } from "../core/ssbPreview.js";
 import { layoutContract, componentContracts, componentOptions } from "../core/contracts.js";
 import { PageEditor } from "./editor/PageEditor.jsx";
+import { PropertiesPanel } from "./editor/PropertiesPanel.jsx";
 
 const starter = {
   title: "MVP Home",
@@ -86,6 +87,7 @@ const clone = (value) => {
 export default function App() {
   const [page, setPage] = useState(() => clone(starter));
   const [error, setError] = useState("");
+  const [selectedPath, setSelectedPath] = useState({ kind: "page" });
   const iframeRef = useRef(null);
 
   const docHtml = useMemo(() => renderDoc(page), [page]);
@@ -106,6 +108,7 @@ export default function App() {
       const next = JSON.parse(text);
       setPage(next);
       setError("");
+      setSelectedPath({ kind: "page" });
     } catch (err) {
       console.error(err);
       setError("Invalid JSON file");
@@ -134,7 +137,7 @@ export default function App() {
       <header style={{ borderBottom: "1px solid #e5e7eb" }}>
         <div
           style={{
-            maxWidth: "72rem",
+            maxWidth: "100rem",
             margin: "0 auto",
             padding: "1rem",
             display: "flex",
@@ -151,6 +154,7 @@ export default function App() {
             onClick={() => {
               setPage(clone(starter));
               setError("");
+              setSelectedPath({ kind: "page" });
             }}
             style={btn(true)}
           >
@@ -160,15 +164,33 @@ export default function App() {
         </div>
       </header>
 
-      <main style={{ maxWidth: "72rem", margin: "0 auto", padding: "1rem" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+      <main style={{ maxWidth: "100rem", width: "100%", margin: "0 auto", padding: "1rem" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 3fr",
+            gap: "1.5rem",
+            alignItems: "start",
+          }}
+        >
           <section style={{ ...panel(), overflow: "auto" }}>
             <PageEditor
+              page={page}
+              layout={layoutContract}
+              components={componentContracts}
+              componentOptions={componentOptions}
+              selectedPath={selectedPath}
+              onSelect={setSelectedPath}
+            />
+          </section>
+          <section style={{ ...panel(), overflow: "auto" }}>
+            <PropertiesPanel
               page={page}
               onChange={handlePageChange}
               layout={layoutContract}
               components={componentContracts}
               componentOptions={componentOptions}
+              selectedPath={selectedPath}
             />
           </section>
           <section style={panel()}>

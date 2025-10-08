@@ -4,10 +4,17 @@
   "properties": {
     "items": {
       "type": "array",
-      "items": { "type": "object", "properties": { "label": { "type": "string" }, "href": { "type": "string" } }, "required": ["label","href"] },
-      "tw": { "type": "string" },
-     "class": { "type": "string" }
-    }
+            "items": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string" },
+          "href": { "type": "string" }
+        },
+        "required": ["label", "href"]
+      }
+    },
+    "tw": { "type": "string" },
+    "class": { "type": "string" }
   },
   "required": ["items"]
 }

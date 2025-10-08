@@ -2,22 +2,26 @@
   "name": "ssb",
   "version": "0.1.0",
   "type": "module",
-  "bin": { "ssb": "./bin/ssb.js" },
-"scripts": {
+  "bin": {
+    "ssb": "./bin/ssb.js"
+  },
+  "scripts": {
     "build:cli": "node ./bin/ssb.js build ./site/pages/home.json --out ./dist && npm run tw:build",
     "tw:build": "tailwindcss -c tailwind.config.js -i theme/tw-input.css -o dist/tw.css --minify",
     "dev:client": "vite --config client/vite.config.js",
     "build:client": "vite build --config client/vite.config.js",
-    "preview:client": "vite preview --config client/vite.config.js"
+    "preview:client": "vite preview --config client/vite.config.js",
+     "check": "node bin/ssb.js check site/pages/home.json"
   },
   "dependencies": {
+    "ajv": "^8.17.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "vite": "^5.4.8",
-    "tailwindcss": "^3.4.14",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47"
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.4.8"
   }
 }

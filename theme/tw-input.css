@@ -10,8 +10,7 @@
   --radius-1:.25rem; --radius-2:.5rem; --radius-3:1rem;
   --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
 }
-
-/* Keep your existing theme base so non-TW components still look fine */
+ 
 @layer base {
   body{font-family:var(--font); color:var(--fg); background:var(--bg); line-height:1.5}
 }

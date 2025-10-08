@@ -26,10 +26,10 @@ function ComponentEditor({
   const wrapTw = current._wrapTw || "";
 
   return (
-    <div style={styles.component}>
-      <div style={styles.componentHeader}>
-        <label style={{ ...styles.label, flex: 1 }}>
-          <span style={styles.labelText}>{label}</span>
+    <div style={propertyStyles.component}>
+      <div style={propertyStyles.componentHeader}>
+        <label style={{ ...propertyStyles.label, flex: 1 }}>
+          <span style={propertyStyles.labelText}>{label}</span>
           <select
             value={type}
             onChange={(e) => {
@@ -42,7 +42,7 @@ function ComponentEditor({
               const nextSchema = components[nextType];
               onChange(createComponent(nextType, nextSchema, current));
             }}
-            style={styles.input}
+            style={propertyStyles.input}
           >
             <option value="">Select component</option>
             {componentOptions.map((opt) => (
@@ -54,7 +54,7 @@ function ComponentEditor({
           <button
             type="button"
             onClick={onRemove}
-            style={styles.removeButton}
+            style={propertyStyles.removeButton}
           >
             Remove
           </button>
@@ -62,9 +62,9 @@ function ComponentEditor({
       </div>
 
       {type && (
-        <div style={styles.componentBody}>
-          <label style={styles.label}>
-            <span style={styles.labelText}>Wrapper classes (_wrapTw)</span>
+        <div style={propertyStyles.componentBody}>
+          <label style={propertyStyles.label}>
+            <span style={propertyStyles.labelText}>Wrapper classes (_wrapTw)</span>
             <input
               type="text"
               value={wrapTw}
@@ -75,7 +75,7 @@ function ComponentEditor({
                 else delete next._wrapTw;
                 onChange(next);
               }}
-              style={styles.input}
+              style={propertyStyles.input}
             />
           </label>
           {schema ? (
@@ -90,7 +90,7 @@ function ComponentEditor({
               path={[type, "props"]}
             />
           ) : (
-            <div style={styles.missingSchema}>No schema found for {type}</div>
+            <div style={propertyStyles.missingSchema}>No schema found for {type}</div>
           )}
         </div>
       )}
@@ -104,30 +104,119 @@ export function SlotEditor({
   onChange,
   components,
   componentOptions,
+  mode = "properties",
+  regionName,
+  selectedPath,
+  onSelect,
+  focusIndex,
 }) {
   const header = slotName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-  if (Array.isArray(value)) {
-    const arr = value;
+  if (mode === "outline") {
+    const slotSelected =
+      selectedPath?.kind === "slot" &&
+      selectedPath?.regionName === regionName &&
+      selectedPath?.slotName === slotName;
+
+    const renderComponentSummary = (component, idx) => {
+      if (!component || typeof component !== "object") {
+        return "Empty component";
+      }
+      return component.type || `Item ${idx + 1}`;
+    };
+
+    const handleSelectSlot = () => {
+      onSelect?.({ kind: "slot", regionName, slotName });
+    };
+
+    const componentItems = Array.isArray(value)
+      ? value.map((item, idx) => ({ item, idx }))
+      : value
+      ? [{ item: value, idx: null }]
+      : [];
+
     return (
-      <div style={styles.slot}>
-        <div style={styles.slotHeader}>{header}</div>
-        {arr.map((item, idx) => (
+      <div style={outlineStyles.slot}>
+        <button
+          type="button"
+          onClick={handleSelectSlot}
+          style={{
+            ...outlineStyles.nodeButton,
+            ...(slotSelected ? outlineStyles.nodeButtonActive : {}),
+          }}
+        >
+          {header}
+        </button>
+        <div style={outlineStyles.componentList}>
+          {componentItems.length === 0 ? (
+            <div style={outlineStyles.emptyLabel}>Empty</div>
+          ) : (
+            componentItems.map(({ item, idx }) => {
+              const isSelected =
+                selectedPath?.kind === "component" &&
+                selectedPath?.regionName === regionName &&
+                selectedPath?.slotName === slotName &&
+                (selectedPath?.index ?? null) === (idx ?? null);
+              return (
+                <button
+                  key={idx ?? "single"}
+                  type="button"
+                  onClick={() =>
+                    onSelect?.({
+                      kind: "component",
+                      regionName,
+                      slotName,
+                      index: idx ?? null,
+                    })
+                  }
+                  style={{
+                    ...outlineStyles.nodeButton,
+                    ...(isSelected ? outlineStyles.nodeButtonActive : {}),
+                  }}
+                >
+                  {renderComponentSummary(item, idx ?? 0)}
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const arrayValue = Array.isArray(value) ? value : undefined;
+  const focusIndexes =
+    arrayValue && focusIndex !== undefined && focusIndex !== null
+      ? arrayValue
+          .map((_, idx) => idx)
+          .filter((idx) => idx === focusIndex)
+      : arrayValue
+      ? arrayValue.map((_, idx) => idx)
+      : [];
+
+  if (arrayValue) {
+    const renderIndexes = focusIndexes.length ? focusIndexes : arrayValue.map((_, idx) => idx);
+    return (
+      <div style={propertyStyles.slot}>
+        <div style={propertyStyles.slotHeader}>{header}</div>
+        {renderIndexes.map((idx) => (
           <ComponentEditor
             key={idx}
-            component={item}
+            component={arrayValue[idx]}
             onChange={(nextComponent) => {
+              if (!onChange) return;
               if (nextComponent === undefined) {
-                const next = arr.filter((_, i) => i !== idx);
+                const next = arrayValue.filter((_, i) => i !== idx);
                 onChange(next.length ? next : []);
               } else {
-                const next = [...arr];
+                const next = [...arrayValue];
                 next[idx] = nextComponent;
                 onChange(next);
               }
             }}
             onRemove={() => {
-              const next = arr.filter((_, i) => i !== idx);
+              if (!onChange) return;
+              const next = arrayValue.filter((_, i) => i !== idx);
               onChange(next.length ? next : []);
             }}
             components={components}
@@ -135,35 +224,42 @@ export function SlotEditor({
             label={`Item ${idx + 1}`}
           />
         ))}
-        <button
-          type="button"
-          onClick={() => {
-            const defaultType = componentOptions[0];
-            if (defaultType) {
-              onChange([
-                ...(arr || []),
-                createComponent(defaultType, components[defaultType] || {}),
-              ]);
-            }
-          }}
-          style={styles.addButton}
-        >
-          Add Component
-        </button>
+        {(!focusIndexes.length || focusIndex === undefined || focusIndex === null) && (
+          <button
+            type="button"
+            onClick={() => {
+              if (!onChange) return;
+              const defaultType = componentOptions[0];
+              if (defaultType) {
+                onChange([
+                  ...(arrayValue || []),
+                  createComponent(defaultType, components[defaultType] || {}),
+                ]);
+              }
+            }}
+            style={propertyStyles.addButton}
+          >
+            Add Component
+          </button>
+        )}
       </div>
     );
   }
 
   return (
-    <div style={styles.slot}>
-      <div style={styles.slotHeader}>{header}</div>
+    <div style={propertyStyles.slot}>
+      <div style={propertyStyles.slotHeader}>{header}</div>
       <ComponentEditor
         component={value}
         onChange={(nextComponent) => {
+          if (!onChange) return;
           if (nextComponent === undefined) onChange(undefined);
           else onChange(nextComponent);
         }}
-        onRemove={() => onChange(undefined)}
+        onRemove={() => {
+          if (!onChange) return;
+          onChange(undefined);
+        }}
         components={components}
         componentOptions={componentOptions}
         label="Component"
@@ -172,7 +268,7 @@ export function SlotEditor({
   );
 }
 
-const styles = {
+const propertyStyles = {
   slot: {
     display: "flex",
     flexDirection: "column",
@@ -243,6 +339,38 @@ const styles = {
     background: "#fef3c7",
     color: "#92400e",
     fontSize: "0.875rem",
+  },
+};
+
+const outlineStyles = {
+  slot: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.25rem",
+  },
+  nodeButton: {
+    textAlign: "left",
+    padding: "0.4rem 0.75rem",
+    borderRadius: "0.5rem",
+    border: "1px solid transparent",
+    background: "transparent",
+    cursor: "pointer",
+    fontSize: "0.85rem",
+  },
+  nodeButtonActive: {
+    borderColor: "#0ea5e9",
+    background: "rgba(14,165,233,0.12)",
+  },
+  componentList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.25rem",
+    paddingLeft: "1rem",
+  },
+  emptyLabel: {
+    color: "#9ca3af",
+    fontSize: "0.75rem",
+    paddingLeft: "0.25rem",
   },
 };
 
