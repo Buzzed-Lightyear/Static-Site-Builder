@@ -11,9 +11,10 @@
     "dev:client": "vite --config client/vite.config.js",
     "build:client": "vite build --config client/vite.config.js",
     "preview:client": "vite preview --config client/vite.config.js",
-     "check": "node bin/ssb.js check site/pages/home.json"
+    "check": "node bin/ssb.js check site/pages/home.json"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "ajv": "^8.17.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

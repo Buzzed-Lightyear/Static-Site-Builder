@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { renderDoc } from "../core/ssbPreview.js";
-import { layoutContract, componentContracts, componentOptions } from "../core/contracts.js";
-import { PageEditor } from "./editor/PageEditor.jsx";
-import { PropertiesPanel } from "./editor/PropertiesPanel.jsx";
+import { JsonPanel } from "./JsonPanel.jsx";
 
 const starter = {
   title: "MVP Home",
@@ -87,7 +85,6 @@ const clone = (value) => {
 export default function App() {
   const [page, setPage] = useState(() => clone(starter));
   const [error, setError] = useState("");
-  const [selectedPath, setSelectedPath] = useState({ kind: "page" });
   const iframeRef = useRef(null);
 
   const docHtml = useMemo(() => renderDoc(page), [page]);
@@ -108,7 +105,6 @@ export default function App() {
       const next = JSON.parse(text);
       setPage(next);
       setError("");
-      setSelectedPath({ kind: "page" });
     } catch (err) {
       console.error(err);
       setError("Invalid JSON file");
@@ -154,7 +150,6 @@ export default function App() {
             onClick={() => {
               setPage(clone(starter));
               setError("");
-              setSelectedPath({ kind: "page" });
             }}
             style={btn(true)}
           >
@@ -168,30 +163,14 @@ export default function App() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 3fr",
+            gridTemplateColumns: "minmax(0, 1.5fr) minmax(0, 2fr)",
             gap: "1.5rem",
             alignItems: "start",
           }}
         >
-          <section style={{ ...panel(), overflow: "auto" }}>
-            <PageEditor
-              page={page}
-              layout={layoutContract}
-              components={componentContracts}
-              componentOptions={componentOptions}
-              selectedPath={selectedPath}
-              onSelect={setSelectedPath}
-            />
-          </section>
-          <section style={{ ...panel(), overflow: "auto" }}>
-            <PropertiesPanel
-              page={page}
-              onChange={handlePageChange}
-              layout={layoutContract}
-              components={componentContracts}
-              componentOptions={componentOptions}
-              selectedPath={selectedPath}
-            />
+          <section style={{ ...panel(), height: "100%", overflow: "auto" }}>
+            <div style={panelHead()}>Page JSON</div>
+            <JsonPanel value={page} onChange={handlePageChange} />
           </section>
           <section style={panel()}>
             <div style={panelHead()}>Preview</div>
@@ -207,15 +186,31 @@ export default function App() {
   );
 }
 
-function btn(primary=false){
+function btn(primary = false) {
   return {
-    padding:"0.25rem 0.75rem",
-    borderRadius:8,
+    padding: "0.25rem 0.75rem",
+    borderRadius: 8,
     border: primary ? "1px solid #0ea5e9" : "1px solid #e5e7eb",
     background: primary ? "#0ea5e9" : "transparent",
     color: primary ? "#fff" : "#111",
-    cursor:"pointer"
+    cursor: "pointer",
   };
 }
-function panel(){ return { border:"1px solid #e5e7eb", borderRadius:12, overflow:"hidden", background:"#fff" }; }
-function panelHead(){ return { padding:"0.75rem", borderBottom:"1px solid #e5e7eb", background:"#f9fafb", fontWeight:600 }; }
+
+function panel() {
+  return {
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
+    overflow: "hidden",
+    background: "#fff",
+  };
+}
+
+function panelHead() {
+  return {
+    padding: "0.75rem",
+    borderBottom: "1px solid #e5e7eb",
+    background: "#f9fafb",
+    fontWeight: 600,
+  };
+}
